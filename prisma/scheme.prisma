@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  walletAddress String         @unique
+  authNonce     String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  founderRecord FounderRecord?
+  subscription  Subscription?
+
+  @@map("users")
+}
+
+model FounderRecord {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  joinedAt         DateTime @default(now())
+  founderRank      Int?
+  isFounder        Boolean  @default(false)
+  founderBadge     String?
+  subscriptionTier String   @default("basic")
+  empGiftTotal     Int      @default(0)
+  empGiftUnlocked  Int      @default(0)
+  empGiftVested    Int      @default(0)
+  empClaimed       Int      @default(0)
+
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("founder_records")
+}
+
+model Subscription {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  subscriptionTier     String   @default("basic")
+  status               String   @default("inactive")
+  stripeCustomerId     String?
+  stripeSubscriptionId String?  @unique
+  stripePriceId        String?
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
